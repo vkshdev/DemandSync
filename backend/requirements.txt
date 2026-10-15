@@ -1,0 +1,24 @@
+# FastAPI & Server
+fastapi>=0.115.0
+uvicorn>=0.30.0
+pydantic>=2.8.0
+
+# Data Processing & Storage
+polars>=1.6.0
+duckdb>=1.0.0
+numpy>=1.26.0
+pandas>=2.2.0
+
+# ML & Forecasting
+lightgbm>=4.4.0
+scikit-learn>=1.5.0
+shap>=0.45.0
+
+# Local Inference (Qwen2.5-1.5B-Instruct)
+torch>=2.3.0
+transformers>=4.44.0
+accelerate>=0.33.0
+
+# Optional Cloud Orchestrator (if cloud fallback ever enabled)
+litellm>=1.44.0
+python-dotenv>=1.0.0
