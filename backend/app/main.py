@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import logging
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,19 @@ from app.core.rate_limiter import RateLimitMiddleware, limiter
 
 logger = logging.getLogger("demandsync.api")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Auto-seed DuckDB if unpopulated
+    try:
+        from app.ml.dataset_loader import seed_database_if_empty
+
+        seed_database_if_empty()
+    except Exception as exc:
+        logger.warning("Failed to auto-seed database during startup: %s", exc)
+    yield
+
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description=(
@@ -15,6 +29,7 @@ app = FastAPI(
         "Retail Prescriptive Analytics Engine with Private Local Qwen2.5 Copilot."
     ),
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Rate limiting middleware

@@ -244,13 +244,18 @@ class DuckDBManager:
                             raise
             return 0
 
-        arrow_table = df.to_arrow()
+        try:
+            arrow_table = df.to_arrow()
+            view_obj = arrow_table
+        except Exception:
+            view_obj = df
+
         view_name = f"_temp_arrow_{os.urandom(4).hex()}"
         col_identifiers = ", ".join(f'"{col}"' for col in df.columns)
 
         with self._write_lock:
             with self.cursor() as cur:
-                cur.register(view_name, arrow_table)
+                cur.register(view_name, view_obj)
                 try:
                     if mode == "replace":
                         cur.execute("BEGIN TRANSACTION")
@@ -291,10 +296,17 @@ class DuckDBManager:
     ) -> pl.DataFrame:
         with self.cursor() as cur:
             if params is not None:
-                arrow_table = cur.execute(query, params).arrow()
+                res = cur.execute(query, params)
             else:
-                arrow_table = cur.execute(query).arrow()
-            return pl.from_arrow(arrow_table)
+                res = cur.execute(query)
+            try:
+                return res.pl()
+            except Exception:
+                try:
+                    arrow_table = res.arrow()
+                    return pl.from_arrow(arrow_table)
+                except Exception:
+                    return pl.DataFrame()
 
     def query_records(
         self,
