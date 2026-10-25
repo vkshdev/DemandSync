@@ -1,4 +1,4 @@
-# DemandSync: Comprehensive System Architecture
+# DemandSync: Full System Architecture
 
 ## 1. Executive Summary & Core Design Philosophy
 
@@ -338,11 +338,11 @@ sequenceDiagram
 
 ---
 
-## 11. Technology Stack Summary
+## 11. Tech Stack Summary
 
 * **Backend Framework**: Python 3.13, FastAPI 0.115, Pydantic v2.
 * **Database & OLAP**: DuckDB 2.0 (Embedded Columnar), Polars 2.0 (Vectorized DataFrame engine), PyArrow 15.0+.
-* **Machine Learning & XAI**: LightGBM 4.7, Scikit-Learn 1.6, SHAP 0.54.
+* **Machine Learning**: LightGBM 4.7, Scikit-Learn 1.6, SHAP 0.54.
 * **Local Language Model**: Qwen/Qwen2.5-1.5B-Instruct, HuggingFace Transformers, PyTorch CPU.
 * **Frontend Application**: Next.js 14.2 (App Router), React 18.3, TailwindCSS 3.4, Lucide-React.
 * **Packaging & Package Management**: `uv` (Python), `pnpm` (Node.js).
