@@ -129,9 +129,30 @@ class DuckDBManager:
                     precipitation_mm DOUBLE NOT NULL,
                     extreme_weather_flag INTEGER NOT NULL,
                     stock_on_hand INTEGER NOT NULL DEFAULT 0,
+                    units_ordered DOUBLE DEFAULT 0.0,
+                    demand_forecast DOUBLE DEFAULT 0.0,
+                    competitor_price DOUBLE DEFAULT 0.0,
+                    weather VARCHAR DEFAULT 'Sunny',
+                    seasonality VARCHAR DEFAULT 'Autumn',
+                    category VARCHAR DEFAULT 'General',
+                    region VARCHAR DEFAULT 'General',
                     PRIMARY KEY (date, store_id, sku_id)
                 );
             """)
+
+            for col_name, col_type, col_default in [
+                ("units_ordered", "DOUBLE", "0.0"),
+                ("demand_forecast", "DOUBLE", "0.0"),
+                ("competitor_price", "DOUBLE", "0.0"),
+                ("weather", "VARCHAR", "'Sunny'"),
+                ("seasonality", "VARCHAR", "'Autumn'"),
+                ("category", "VARCHAR", "'General'"),
+                ("region", "VARCHAR", "'General'"),
+            ]:
+                try:
+                    cur.execute(f'ALTER TABLE historical_sales ADD COLUMN IF NOT EXISTS "{col_name}" {col_type} DEFAULT {col_default}')
+                except Exception:
+                    pass
 
             cur.execute("""
                 CREATE INDEX IF NOT EXISTS idx_hist_sales_sku_date 
@@ -300,11 +321,12 @@ class DuckDBManager:
             else:
                 res = cur.execute(query)
             try:
-                return res.pl()
+                arrow_table = res.to_arrow_table()
+                return pl.from_arrow(arrow_table)
             except Exception:
                 try:
-                    arrow_table = res.arrow()
-                    return pl.from_arrow(arrow_table)
+                    df = res.df()
+                    return pl.from_pandas(df)
                 except Exception:
                     return pl.DataFrame()
 
