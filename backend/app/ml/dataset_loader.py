@@ -26,62 +26,60 @@ DEFAULT_CSV_PATH = os.path.join(
     "retail_store_inventory.csv",
 )
 
-# Canonical mapping rules: normalized string -> internal column key
+# Canonical mapping strictly covering the authentic terms present in the Kaggle CSV:
+# Date, Store ID, Product ID, Category, Region, Inventory Level, Units Sold,
+# Units Ordered, Demand Forecast, Price, Discount, Weather Condition,
+# Holiday/Promotion, Competitor Pricing, Seasonality
 COLUMN_ALIAS_MAP: Dict[str, str] = {
+    # 1. Date
     "date": "date",
-    "timestamp": "date",
-    "day": "date",
+    # 2. Store ID
     "store_id": "store_id",
-    "storeid": "store_id",
-    "store": "store_id",
-    "store_name": "store_id",
+    # 3. Product ID
     "product_id": "sku_id",
-    "productid": "sku_id",
     "sku_id": "sku_id",
-    "skuid": "sku_id",
-    "product": "sku_id",
-    "item_id": "sku_id",
-    "item": "sku_id",
-    "sku": "sku_id",
-    "units_sold": "sales",
-    "unit_sold": "sales",
-    "sales": "sales",
-    "quantity": "sales",
-    "qty": "sales",
-    "demand": "sales",
+    # 4. Category
+    "category": "category",
+    # 5. Region
+    "region": "region",
+    # 6. Inventory Level
     "inventory_level": "current_stock",
-    "inventorylevel": "current_stock",
-    "stock_level": "current_stock",
     "current_stock": "current_stock",
-    "stock": "current_stock",
     "stock_on_hand": "current_stock",
+    # 7. Units Sold
+    "units_sold": "sales",
+    "sales": "sales",
+    # 8. Units Ordered
+    "units_ordered": "units_ordered",
+    # 9. Demand Forecast
+    "demand_forecast": "demand_forecast",
+    # 10. Price
     "price": "price",
-    "retail_price": "price",
-    "unit_price": "price",
+    # 11. Discount
     "discount": "discount_pct",
     "discount_pct": "discount_pct",
-    "markdown": "discount_pct",
+    # 12. Weather Condition
     "weather_condition": "weather",
     "weather": "weather",
-    "temperature": "temperature",
-    "temperature_celsius": "temperature",
+    # 13. Holiday/Promotion
+    "holiday_promotion": "holiday",
+    "holidaypromotion": "holiday",
     "holiday": "holiday",
-    "is_holiday": "holiday",
-    "promotion": "holiday",
-    "promo": "holiday",
     "promo_active": "holiday",
-    "category": "category",
-    "department": "department",
-    "region": "region",
+    # 14. Competitor Pricing
+    "competitor_pricing": "competitor_price",
+    "competitor_price": "competitor_price",
+    # 15. Seasonality
+    "seasonality": "seasonality",
 }
 
 
 def _clean_header_name(header: str) -> str:
     """Normalize column header into alphanumeric lowercase with underscores."""
     s = header.strip().lower()
-    s = re.sub(r"[\s\-]+", "_", s)
-    s = re.sub(r"[^\w]", "", s)
-    return s
+    s = re.sub(r"[\s\-\/\.]+", "_", s)
+    s = re.sub(r"[^\w_]", "", s)
+    return s.strip("_")
 
 
 def resolve_csv_path(custom_path: Optional[str] = None) -> str:
@@ -158,10 +156,15 @@ def load_retail_dataset(
     # 1. Parse Date column
     if norm_df.schema.get("date") != pl.Date:
         try:
-            norm_df = norm_df.with_columns(pl.col("date").cast(pl.Date))
+            norm_df = norm_df.with_columns(
+                pl.col("date")
+                .cast(pl.String)
+                .str.replace_all("/", "-")
+                .str.to_date("%Y-%m-%d", strict=False)
+            )
         except Exception:
             norm_df = norm_df.with_columns(
-                pl.col("date").str.to_date("%Y-%m-%d", strict=False)
+                pl.col("date").str.to_date(strict=False)
             )
 
     # 2. Parse Store & SKU IDs
@@ -273,8 +276,55 @@ def load_retail_dataset(
         norm_df = norm_df.with_columns(
             pl.col("current_stock").cast(pl.Int32).fill_null(0).alias("stock_on_hand")
         )
+    elif "stock_on_hand" not in norm_df.columns:
+        norm_df = norm_df.with_columns(pl.lit(0).alias("stock_on_hand"))
+
+    # 8. Parse Units Ordered
+    if "units_ordered" in norm_df.columns:
+        norm_df = norm_df.with_columns(
+            pl.col("units_ordered").cast(pl.Float64).fill_null(0.0).clip(lower_bound=0.0)
+        )
     else:
-        norm_df = norm_df.with_columns(pl.lit(50).alias("stock_on_hand"))
+        norm_df = norm_df.with_columns(pl.lit(0.0).alias("units_ordered"))
+
+    # 9. Parse Demand Forecast
+    if "demand_forecast" in norm_df.columns:
+        norm_df = norm_df.with_columns(
+            pl.col("demand_forecast").cast(pl.Float64).fill_null(pl.col("sales")).clip(lower_bound=0.0)
+        )
+    else:
+        norm_df = norm_df.with_columns(pl.col("sales").alias("demand_forecast"))
+
+    # 10. Parse Competitor Price
+    if "competitor_price" in norm_df.columns:
+        norm_df = norm_df.with_columns(
+            pl.col("competitor_price").cast(pl.Float64).fill_null(pl.col("price")).clip(lower_bound=0.01)
+        )
+    else:
+        norm_df = norm_df.with_columns(pl.col("price").alias("competitor_price"))
+
+    # 11. Parse Seasonality
+    if "seasonality" in norm_df.columns:
+        norm_df = norm_df.with_columns(
+            pl.col("seasonality").cast(pl.String).fill_null("Autumn").alias("seasonality")
+        )
+    else:
+        norm_df = norm_df.with_columns(pl.lit("Autumn").alias("seasonality"))
+
+    # 12. Parse Category & Region
+    if "category" in norm_df.columns:
+        norm_df = norm_df.with_columns(
+            pl.col("category").cast(pl.String).fill_null("General").alias("category")
+        )
+    else:
+        norm_df = norm_df.with_columns(pl.lit("General").alias("category"))
+
+    if "region" in norm_df.columns:
+        norm_df = norm_df.with_columns(
+            pl.col("region").cast(pl.String).fill_null("General").alias("region")
+        )
+    else:
+        norm_df = norm_df.with_columns(pl.lit("General").alias("region"))
 
     # Optional filtering
     if stores:
@@ -294,55 +344,41 @@ def load_retail_dataset(
         "precipitation_mm",
         "extreme_weather_flag",
         "stock_on_hand",
+        "units_ordered",
+        "demand_forecast",
+        "competitor_price",
+        "weather",
+        "seasonality",
+        "category",
+        "region",
     ]
-    # Retain category & region if available for entity tables
-    if "category" in norm_df.columns:
-        final_cols.append("category")
-    if "region" in norm_df.columns:
-        final_cols.append("region")
 
-    return norm_df.select(final_cols).sort(["date", "store_id", "sku_id"])
+    selected_cols = [c for c in final_cols if c in norm_df.columns]
+    return norm_df.select(selected_cols).sort(["date", "store_id", "sku_id"])
 
 
 def extract_stores_metadata(df: pl.DataFrame) -> pl.DataFrame:
     """Extracts unique stores and generates metadata matching the stores table schema."""
-    unique_stores = df.select("store_id").unique().sort("store_id")
+    if "region" in df.columns:
+        store_regions = (
+            df.select(["store_id", "region"])
+            .drop_nulls()
+            .unique(subset=["store_id"], keep="first")
+        )
+    else:
+        store_regions = (
+            df.select("store_id")
+            .unique()
+            .with_columns(pl.lit("General").alias("region"))
+        )
 
-    regions = []
-    has_region = "region" in df.columns
-
-    rows = []
-    for row in unique_stores.iter_rows(named=True):
-        sid = row["store_id"]
-        reg = "General"
-        if has_region:
-            reg_val = (
-                df.filter(pl.col("store_id") == sid)
-                .select("region")
-                .drop_nulls()
-                .head(1)
-            )
-            if not reg_val.is_empty():
-                reg = str(reg_val.item())
-
-        rows.append({
-            "store_id": sid,
-            "store_name": f"Store {sid}",
-            "region": reg,
-            "store_type": "Supercenter",
-            "square_footage": 45000,
-        })
-
-    return pl.DataFrame(
-        rows,
-        schema={
-            "store_id": pl.String,
-            "store_name": pl.String,
-            "region": pl.String,
-            "store_type": pl.String,
-            "square_footage": pl.Int64,
-        },
-    )
+    return store_regions.select([
+        pl.col("store_id").cast(pl.String),
+        (pl.lit("Store ") + pl.col("store_id").cast(pl.String)).alias("store_name"),
+        pl.col("region").cast(pl.String).fill_null("General").alias("region"),
+        pl.lit("Supercenter").alias("store_type"),
+        pl.lit(45000).cast(pl.Int64).alias("square_footage"),
+    ]).sort("store_id")
 
 
 def extract_products_metadata(df: pl.DataFrame) -> pl.DataFrame:
@@ -350,62 +386,40 @@ def extract_products_metadata(df: pl.DataFrame) -> pl.DataFrame:
     Extracts unique SKUs and generates realistic inventory metadata
     (wholesale unit cost at ~55% retail price, 7-day lead time, MOQ 10).
     """
-    grouped = df.group_by("sku_id").agg([
-        pl.col("price").median().alias("median_price"),
-    ])
+    if "category" in df.columns:
+        sku_cat = (
+            df.select(["sku_id", "category"])
+            .drop_nulls()
+            .unique(subset=["sku_id"], keep="first")
+        )
+    else:
+        sku_cat = (
+            df.select("sku_id")
+            .unique()
+            .with_columns(pl.lit("General").alias("category"))
+        )
 
-    has_category = "category" in df.columns
+    sku_price = (
+        df.group_by("sku_id")
+        .agg(pl.col("price").median().alias("median_price"))
+    )
 
-    rows = []
-    for row in grouped.iter_rows(named=True):
-        sku = row["sku_id"]
-        price = float(row["median_price"]) if row["median_price"] is not None else 25.0
-        price = max(0.99, round(price, 2))
-        unit_cost = round(price * 0.55, 2)  # ~45% gross margin
+    combined = sku_cat.join(sku_price, on="sku_id", how="left")
 
-        cat = "General"
-        if has_category:
-            cat_val = (
-                df.filter(pl.col("sku_id") == sku)
-                .select("category")
-                .drop_nulls()
-                .head(1)
-            )
-            if not cat_val.is_empty():
-                cat = str(cat_val.item())
-
-        rows.append({
-            "sku_id": sku,
-            "sku_name": f"Product {sku}",
-            "department": cat,
-            "category": cat,
-            "unit_cost": unit_cost,
-            "retail_price": price,
-            "lead_time_days": 7.0,
-            "lead_time_std": 1.5,
-            "min_order_qty": 10,
-            "holding_cost_annual_rate": 0.20,
-            "order_cost": 50.0,
-            "service_level": 0.95,
-        })
-
-    return pl.DataFrame(
-        rows,
-        schema={
-            "sku_id": pl.String,
-            "sku_name": pl.String,
-            "department": pl.String,
-            "category": pl.String,
-            "unit_cost": pl.Float64,
-            "retail_price": pl.Float64,
-            "lead_time_days": pl.Float64,
-            "lead_time_std": pl.Float64,
-            "min_order_qty": pl.Int64,
-            "holding_cost_annual_rate": pl.Float64,
-            "order_cost": pl.Float64,
-            "service_level": pl.Float64,
-        },
-    ).sort("sku_id")
+    return combined.select([
+        pl.col("sku_id").cast(pl.String),
+        (pl.lit("Product ") + pl.col("sku_id").cast(pl.String)).alias("sku_name"),
+        pl.col("category").cast(pl.String).fill_null("General").alias("department"),
+        pl.col("category").cast(pl.String).fill_null("General").alias("category"),
+        (pl.col("median_price").fill_null(25.0).clip(lower_bound=0.99) * 0.55).round(2).alias("unit_cost"),
+        pl.col("median_price").fill_null(25.0).clip(lower_bound=0.99).round(2).alias("retail_price"),
+        pl.lit(7.0).alias("lead_time_days"),
+        pl.lit(1.5).alias("lead_time_std"),
+        pl.lit(10).cast(pl.Int64).alias("min_order_qty"),
+        pl.lit(0.20).alias("holding_cost_annual_rate"),
+        pl.lit(50.0).alias("order_cost"),
+        pl.lit(0.95).alias("service_level"),
+    ]).sort("sku_id")
 
 
 def calculate_inventory_snapshots(
@@ -553,7 +567,7 @@ def seed_database_from_csv(
     products_df = extract_products_metadata(sales_df)
     snapshots_df = calculate_inventory_snapshots(sales_df, products_df)
 
-    # Prepare historical_sales clean schema
+    # Prepare historical_sales clean schema covering all authentic dataset columns
     hist_sales_cols = [
         "date",
         "store_id",
@@ -566,8 +580,15 @@ def seed_database_from_csv(
         "precipitation_mm",
         "extreme_weather_flag",
         "stock_on_hand",
+        "units_ordered",
+        "demand_forecast",
+        "competitor_price",
+        "weather",
+        "seasonality",
+        "category",
+        "region",
     ]
-    clean_sales_df = sales_df.select(hist_sales_cols)
+    clean_sales_df = sales_df.select([c for c in hist_sales_cols if c in sales_df.columns])
 
     # Ingest entities
     logger.info("Ingesting stores (%d)...", stores_df.height)
