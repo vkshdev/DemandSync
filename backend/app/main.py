@@ -12,13 +12,16 @@ logger = logging.getLogger("demandsync.api")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Auto-seed DuckDB if unpopulated
-    try:
-        from app.ml.dataset_loader import seed_database_if_empty
+    # Startup: Auto-seed DuckDB if unpopulated (run off-thread in production)
+    import os
+    if not os.getenv("TESTING"):
+        try:
+            import asyncio
+            from app.ml.dataset_loader import seed_database_if_empty
 
-        seed_database_if_empty()
-    except Exception as exc:
-        logger.warning("Failed to auto-seed database during startup: %s", exc)
+            await asyncio.to_thread(seed_database_if_empty)
+        except Exception as exc:
+            logger.warning("Failed to auto-seed database during startup: %s", exc)
     yield
 
 
