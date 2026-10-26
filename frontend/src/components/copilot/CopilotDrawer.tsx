@@ -225,7 +225,7 @@ export default function CopilotDrawer({
                   <div>
                     <h4 className="text-xs font-semibold text-slate-300 mb-1.5">Key Demand Drivers</h4>
                     <ul className="space-y-1">
-                      {briefing.key_drivers.map((drv, i) => (
+                      {briefing.key_drivers.map((drv: string, i: number) => (
                         <li key={i} className="text-xs text-slate-300 flex items-start gap-1.5">
                           <span className="text-indigo-400 font-bold">*</span>
                           <span>{drv}</span>
@@ -238,7 +238,7 @@ export default function CopilotDrawer({
                   <div>
                     <h4 className="text-xs font-semibold text-slate-300 mb-1.5">Prescriptive Actions</h4>
                     <div className="space-y-2">
-                      {briefing.action_recommendations.map((action, i) => (
+                      {briefing.action_recommendations.map((action: string, i: number) => (
                         <div
                           key={i}
                           className="p-2.5 rounded-lg bg-indigo-950/20 border border-indigo-800/30 text-xs text-indigo-200 flex items-start gap-2"

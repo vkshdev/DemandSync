@@ -160,7 +160,7 @@ export function MacroDemandChart({
             </defs>
 
             {/* Y Grid */}
-            {yTicks.map((val) => {
+            {yTicks.map((val: number) => {
               const y = scaleY(val);
               return (
                 <g key={val}>
@@ -186,7 +186,7 @@ export function MacroDemandChart({
             })}
 
             {/* X Ticks */}
-            {xTickIndices.map((idx) => {
+            {xTickIndices.map((idx: number) => {
               const x = scaleX(idx);
               const point = data[idx];
               if (!point) return null;
