@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ScenarioLab from '@/components/simulator/ScenarioLab';
 import CopilotDrawer from '@/components/copilot/CopilotDrawer';
 
-export default function SimulatorPage() {
+function SimulatorContent() {
   const searchParams = useSearchParams();
-  const skuParam = searchParams?.get('sku_id') || 'SKU-001';
-  const storeParam = searchParams?.get('store_id') || 'STORE-001';
+  const skuParam = searchParams?.get('sku_id') || 'P0001';
+  const storeParam = searchParams?.get('store_id') || 'S001';
 
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [copilotContext, setCopilotContext] = useState<Record<string, unknown>>({});
@@ -32,5 +32,13 @@ export default function SimulatorPage() {
         activeContext={copilotContext}
       />
     </div>
+  );
+}
+
+export default function SimulatorPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading scenario simulator...</div>}>
+      <SimulatorContent />
+    </Suspense>
   );
 }
