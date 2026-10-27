@@ -203,3 +203,124 @@ export interface SKUInfo {
   lead_time_days: number;
   min_order_qty: number;
 }
+
+// Backtesting & Model Performance Types (EPIC-1 P0)
+export interface BacktestPoint {
+  date: string;
+  day: number;
+  actual: number;
+  p10: number;
+  p50: number;
+  p90: number;
+  error: number;
+  abs_error: number;
+}
+
+export interface BacktestMetrics {
+  wape_pct: number;
+  bias_pct: number;
+  mase: number;
+  pinball_loss_p10: number;
+  pinball_loss_p50: number;
+  pinball_loss_p90: number;
+  tracking_signal_status: 'OPTIMAL' | 'OVER_FORECASTING' | 'UNDER_FORECASTING' | string;
+  total_actual_units: number;
+  total_forecast_p50_units: number;
+  test_days: number;
+}
+
+export interface BacktestResponse {
+  sku_id: string;
+  store_id: string;
+  cutoff_date: string;
+  metrics: BacktestMetrics;
+  time_series: BacktestPoint[];
+}
+
+// Purchase Order & ERP Transmission Types (EPIC-2 P0)
+export interface POLineItem {
+  sku_id: string;
+  sku_name: string;
+  unit_cost_usd: number;
+  order_quantity: number;
+  total_cost_usd: number;
+  moq: number;
+  case_pack_size: number;
+}
+
+export interface PurchaseOrderRequest {
+  sku_id: string;
+  store_id: string;
+  current_stock?: number;
+  safety_stock_units?: number;
+  reorder_point_units?: number;
+  eoq_units?: number;
+  min_order_qty?: number;
+  unit_cost_usd?: number;
+  vendor?: string;
+  notes?: string;
+}
+
+export interface PurchaseOrderResponse {
+  po_number: string;
+  created_at: string;
+  store_id: string;
+  vendor: string;
+  line_items: POLineItem[];
+  total_units: number;
+  total_cost_usd: number;
+  lead_time_days_expected: number;
+  status: string;
+  notes?: string;
+}
+
+export interface ERPTransmitRequest {
+  po_number: string;
+  erp_system?: 'SAP_S4HANA' | 'ORACLE_NETSUITE' | 'MICROSOFT_DYNAMICS' | string;
+  po_data?: PurchaseOrderResponse;
+}
+
+export interface ERPTransmitResponse {
+  status: string;
+  edi_control_number: string;
+  erp_transaction_id: string;
+  timestamp: string;
+  erp_system: string;
+  message: string;
+}
+
+// Hierarchical Reconciliation Types (EPIC-6 P2)
+export interface ReconciliationResponse {
+  method: string;
+  hierarchy_levels: string[];
+  reconciled_totals: Record<string, number>;
+  sku_forecasts: Record<string, number>;
+  category_forecasts: Record<string, number>;
+  store_forecasts: Record<string, number>;
+  chain_total: number;
+  max_coherence_error: number;
+  is_coherent: boolean;
+}
+
+// Automated Drift & Monitoring Types (EPIC-7 P3)
+export interface FeatureDriftResult {
+  feature_name: string;
+  ks_statistic: number;
+  p_value: number;
+  psi_score: number;
+  drift_status: 'STABLE' | 'MODERATE_DRIFT' | 'SIGNIFICANT_DRIFT' | string;
+  is_drift_detected: boolean;
+  baseline_mean: number;
+  current_mean: number;
+}
+
+export interface PipelineDriftReport {
+  timestamp: string;
+  total_series_evaluated: number;
+  overall_system_status: 'HEALTHY' | 'MONITOR' | 'RETRAINING_REQUIRED' | string;
+  features_drifted_count: number;
+  recommended_action: string;
+  feature_metrics: FeatureDriftResult[];
+}
+
+
