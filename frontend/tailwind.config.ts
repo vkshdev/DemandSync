@@ -17,10 +17,21 @@ const config: Config = {
           600: '#16a34a',
           700: '#15803d',
         },
+        // Enterprise Neutral Dark Grey palette (replaces blue-tinted slate in dark mode)
         slate: {
-          850: '#151e2e',
-          925: '#0b111e',
-          950: '#060a12',
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#52525b',
+          700: '#3f3f46',
+          800: '#27272a', // Enterprise neutral dark border
+          850: '#1c1c1f', // Intermediate dark grey
+          900: '#161618', // Enterprise neutral dark inset / hover
+          925: '#121214', // Enterprise elevated card dark grey
+          950: '#09090b', // Enterprise deep matte canvas dark grey
         },
       },
       fontFamily: {
