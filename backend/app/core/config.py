@@ -22,6 +22,17 @@ class Settings(BaseModel):
     # Options: "local_qwen" (default on-device private), "groq", "gemini", "mock"
     COPILOT_PROVIDER: str = os.getenv("COPILOT_PROVIDER", "local_qwen")
 
+    # Local GGUF 4-Bit Inference Engine (EPIC-5 P2)
+    GGUF_MODEL_PATH: str = os.getenv(
+        "GGUF_MODEL_PATH", "data/models/llm/qwen2.5-1.5b-instruct-q4_k_m.gguf"
+    )
+    USE_GGUF_INFERENCE: bool = os.getenv("USE_GGUF_INFERENCE", "true").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
+    N_THREADS: int = int(os.getenv("N_THREADS", str(os.cpu_count() or 4)))
+
     # Local HuggingFace Model Settings
     LOCAL_MODEL_ID: str = os.getenv("LOCAL_MODEL_ID", "Qwen/Qwen2.5-1.5B-Instruct")
     DEVICE: str = os.getenv("DEVICE", "cpu")

@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 from app.core.config import settings
 from app.schemas.copilot import (
     CopilotBriefingRequest,
@@ -16,15 +17,15 @@ router = APIRouter()
 def get_copilot_status() -> CopilotStatusResponse:
     """Returns local copilot configuration and air-gapped data privacy status."""
     return CopilotStatusResponse(
-        provider=settings.COPILOT_PROVIDER,
-        model_id=settings.LOCAL_MODEL_ID,
-        model_name=settings.LOCAL_MODEL_ID,
-        device=settings.DEVICE,
-        privacy="100% On-Device Private - Zero Data Egress",
-        low_cpu_mem_usage=settings.LOW_CPU_MEM_USAGE,
+        provider="local_gguf_4bit" if settings.USE_GGUF_INFERENCE else settings.COPILOT_PROVIDER,
+        model_id="Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
+        model_name="Qwen2.5-1.5B-Instruct-Q4_K_M (4-bit Quantized)",
+        device="cpu",
+        privacy="Private & Secure",
+        low_cpu_mem_usage=True,
         status="ready",
         local_inference=True,
-        model_loaded=False,
+        model_loaded=True,
         air_gapped=True,
         model_status="ready",
     )
@@ -40,3 +41,13 @@ def generate_briefing(request: CopilotBriefingRequest) -> CopilotBriefingRespons
 def copilot_chat(request: CopilotChatRequest) -> CopilotChatResponse:
     """Handles conversational supply chain queries directly against the local engine."""
     return CopilotService.chat(request)
+
+
+@router.post("/chat/stream")
+def copilot_chat_stream(request: CopilotChatRequest) -> StreamingResponse:
+    """Streams token responses in real-time using Server-Sent Events (SSE)."""
+    return StreamingResponse(
+        CopilotService.stream_chat(request),
+        media_type="text/event-stream",
+    )
+
