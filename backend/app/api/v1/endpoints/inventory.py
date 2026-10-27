@@ -3,14 +3,20 @@ from fastapi import APIRouter, Query
 from app.schemas.inventory import (
     CalculatePolicyRequest,
     CalculatePolicyResponse,
+    ERPTransmitRequest,
+    ERPTransmitResponse,
     InventoryAlert,
     InventoryAlertsResponse,
+    PurchaseOrderRequest,
+    PurchaseOrderResponse,
 )
 from app.services.inventory_engine import (
     calculate_eoq,
     calculate_financial_risk,
     calculate_reorder_point,
     calculate_safety_stock,
+    generate_purchase_order,
+    transmit_purchase_order_to_erp,
 )
 
 router = APIRouter()
@@ -141,3 +147,56 @@ def calculate_inventory_policy(
         holding_cost_burden_usd=float(fin_risk.get("holding_cost_burden_usd", 0.0)),
         stockout_risk_pct=float(fin_risk.get("stockout_risk_pct", 0.0)),
     )
+
+
+@router.post("/purchase-order", response_model=PurchaseOrderResponse)
+def create_purchase_order(
+    request: PurchaseOrderRequest,
+) -> PurchaseOrderResponse:
+    """
+    Generates a formal purchase order calculating replenishment quantities:
+    max(EOQ, (ROP + SS) - Current Stock) constrained by MOQ and case packaging.
+    """
+    return generate_purchase_order(request)
+
+
+@router.post("/purchase-order/transmit", response_model=ERPTransmitResponse)
+def transmit_po_to_erp(
+    request: ERPTransmitRequest,
+) -> ERPTransmitResponse:
+    """
+    Simulates EDI 850 transmission to external enterprise ERP systems
+    (SAP S/4HANA, NetSuite, Oracle Fusion).
+    """
+    return transmit_purchase_order_to_erp(request)
+
+
+@router.get("/drift-report")
+def get_inventory_drift_report():
+    """
+    Returns automated data drift metrics across inventory sales, prices, and demand features.
+    """
+    from app.ml.drift_detector import DriftDetector
+    report = DriftDetector.generate_system_drift_report()
+    return {
+        "timestamp": report.timestamp,
+        "total_series_evaluated": report.total_series_evaluated,
+        "overall_system_status": report.overall_system_status,
+        "features_drifted_count": report.features_drifted_count,
+        "recommended_action": report.recommended_action,
+        "feature_metrics": [
+            {
+                "feature_name": m.feature_name,
+                "ks_statistic": m.ks_statistic,
+                "p_value": m.p_value,
+                "psi_score": m.psi_score,
+                "drift_status": m.drift_status,
+                "is_drift_detected": m.is_drift_detected,
+                "baseline_mean": m.baseline_mean,
+                "current_mean": m.current_mean,
+            }
+            for m in report.feature_metrics
+        ],
+    }
+
+

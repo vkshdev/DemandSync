@@ -54,3 +54,56 @@ class CalculatePolicyResponse(StrictBaseModel):
 InventoryAlertItem = InventoryAlert
 InventoryPolicyRequest = CalculatePolicyRequest
 InventoryPolicyResponse = CalculatePolicyResponse
+
+
+# Purchase Order (PO) & ERP Integration Schemas (EPIC-2 P0)
+class POLineItem(StrictBaseModel):
+    sku_id: str
+    sku_name: str
+    unit_cost_usd: float
+    order_quantity: int
+    total_cost_usd: float
+    moq: int = 1
+    case_pack_size: int = 1
+
+
+class PurchaseOrderRequest(StrictBaseModel):
+    sku_id: str
+    store_id: str
+    current_stock: Optional[int] = None
+    safety_stock_units: Optional[int] = None
+    reorder_point_units: Optional[int] = None
+    eoq_units: Optional[int] = None
+    min_order_qty: Optional[int] = None
+    unit_cost_usd: Optional[float] = None
+    vendor: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class PurchaseOrderResponse(StrictBaseModel):
+    po_number: str
+    created_at: str
+    store_id: str
+    vendor: str
+    line_items: list[POLineItem]
+    total_units: int
+    total_cost_usd: float
+    lead_time_days_expected: float
+    status: str = "DRAFT"
+    notes: Optional[str] = None
+
+
+class ERPTransmitRequest(StrictBaseModel):
+    po_number: str
+    erp_system: str = "SAP_S4HANA"  # "SAP_S4HANA" | "ORACLE_NETSUITE" | "MICROSOFT_DYNAMICS"
+    po_data: Optional[PurchaseOrderResponse] = None
+
+
+class ERPTransmitResponse(StrictBaseModel):
+    status: str
+    edi_control_number: str
+    erp_transaction_id: str
+    timestamp: str
+    erp_system: str
+    message: str
+
