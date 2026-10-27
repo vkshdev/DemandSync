@@ -68,3 +68,4 @@ backend/data/*.csv
 .ruff_cache/
 .mypy_cache/
 *.duckdb.wal
+models

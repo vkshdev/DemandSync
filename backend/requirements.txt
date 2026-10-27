@@ -15,10 +15,11 @@ lightgbm>=4.4.0
 scikit-learn>=1.5.0
 shap>=0.45.0
 
-# Local Inference (Qwen2.5-1.5B-Instruct)
+# Local Inference (Qwen2.5-1.5B-Instruct & 4-Bit GGUF)
 torch>=2.3.0
 transformers>=4.44.0
 accelerate>=0.33.0
+llama-cpp-python>=0.2.90
 
 # Optional Cloud Orchestrator (if cloud fallback ever enabled)
 litellm>=1.44.0
