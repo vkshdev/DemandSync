@@ -20,6 +20,7 @@ class DuckDBManager:
         "precomputed_features": ["date", "store_id", "sku_id"],
         "inventory_snapshots": ["store_id", "sku_id"],
         "forecast_records": ["forecast_id"],
+        "model_registry": ["model_id"],
     }
     ALLOWED_TABLES = frozenset(TABLE_PRIMARY_KEYS.keys())
 
@@ -233,6 +234,31 @@ class DuckDBManager:
             cur.execute("""
                 CREATE INDEX IF NOT EXISTS idx_forecasts_sku_horizon 
                 ON forecast_records (sku_id, horizon_date);
+            """)
+
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS model_registry (
+                    model_id VARCHAR PRIMARY KEY,
+                    store_id VARCHAR NOT NULL,
+                    sku_id VARCHAR NOT NULL,
+                    version VARCHAR NOT NULL,
+                    model_type VARCHAR NOT NULL,
+                    artifact_path VARCHAR NOT NULL,
+                    artifact_hash VARCHAR NOT NULL,
+                    training_duration_sec DOUBLE,
+                    pinball_loss_p10 DOUBLE,
+                    pinball_loss_p50 DOUBLE,
+                    pinball_loss_p90 DOUBLE,
+                    wape_pct DOUBLE,
+                    bias_pct DOUBLE,
+                    mase DOUBLE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_model_reg_store_sku 
+                ON model_registry (store_id, sku_id);
             """)
         finally:
             cur.close()

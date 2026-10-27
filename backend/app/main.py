@@ -90,7 +90,7 @@ def root():
         "app": "DemandSync",
         "version": "1.0.0",
         "docs_url": "/docs",
-        "privacy": "100% On-Device Private Architecture",
+        "privacy": "Private & Secure Architecture",
     }
 
 

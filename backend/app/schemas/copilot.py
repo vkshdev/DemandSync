@@ -57,7 +57,7 @@ class CopilotStatusResponse(StrictBaseModel):
     model_id: str = "Qwen/Qwen2.5-1.5B-Instruct"
     model_name: str = "Qwen/Qwen2.5-1.5B-Instruct"
     device: str = "cpu"
-    privacy: str = "100% On-Device Private - Zero Data Egress"
+    privacy: str = "Private & Secure"
     low_cpu_mem_usage: bool = True
     status: str = "ready"
     local_inference: bool = True
