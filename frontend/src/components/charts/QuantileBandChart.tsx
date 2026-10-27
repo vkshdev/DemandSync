@@ -16,9 +16,9 @@ export interface QuantileBandChartProps {
 
 export function QuantileBandChart({
   data = [],
-  title = '30-Day Probabilistic Demand Forecast',
-  subtitle = 'Quantile confidence envelope (P10-P90) with median projection (P50)',
-  height = 340,
+  title = '30-Day Demand Forecast',
+  subtitle = 'Projected sales range with expected baseline',
+  height = 320,
   unitLabel = 'units',
   showActuals = true,
   className = '',
@@ -28,7 +28,7 @@ export function QuantileBandChart({
 
   const viewBoxWidth = 800;
   const viewBoxHeight = height;
-  const padding = { top: 28, right: 36, bottom: 48, left: 64 };
+  const padding = { top: 24, right: 32, bottom: 44, left: 60 };
   const chartWidth = viewBoxWidth - padding.left - padding.right;
   const chartHeight = viewBoxHeight - padding.top - padding.bottom;
 
@@ -138,38 +138,40 @@ export function QuantileBandChart({
   return (
     <div
       ref={containerRef}
-      className={`rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl backdrop-blur-md ${className}`}
+      className={`rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121214] p-5 shadow-sm ${className}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-indigo-400" />
-            <h3 className="font-semibold text-slate-100">{title}</h3>
+            <Activity className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">{title}</h3>
           </div>
-          {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
+          )}
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-300">
+        <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600 dark:text-slate-300">
           <div className="flex items-center gap-1.5">
-            <span className="inline-block h-3 w-5 rounded bg-indigo-500/25 border border-indigo-400/40" />
-            <span>P10 - P90 Envelope</span>
+            <span className="inline-block h-2.5 w-4 rounded bg-indigo-500/20 border border-indigo-500/40" />
+            <span className="text-[11px]">Expected Sales Range</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="inline-block h-0.5 w-4 bg-indigo-500 rounded" />
-            <span>P50 Median</span>
+            <span className="inline-block h-0.5 w-3.5 bg-indigo-600 dark:bg-indigo-400 rounded" />
+            <span className="text-[11px]">Expected Sales</span>
           </div>
           {hasActuals && showActuals && (
             <div className="flex items-center gap-1.5">
-              <span className="inline-block h-0.5 w-4 bg-emerald-400 border-dashed border-b border-emerald-400" />
-              <span>Actuals</span>
+              <span className="inline-block h-0.5 w-3.5 bg-emerald-600 dark:bg-emerald-400 border-dashed border-b" />
+              <span className="text-[11px]">Actuals</span>
             </div>
           )}
         </div>
       </div>
 
       {data.length === 0 ? (
-        <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-800 text-sm text-slate-500">
+        <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-400">
           No forecast data available for selected horizon
         </div>
       ) : (
@@ -182,8 +184,8 @@ export function QuantileBandChart({
           >
             <defs>
               <linearGradient id="quantileGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.28" />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity="0.08" />
+                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity="0.04" />
               </linearGradient>
             </defs>
 
@@ -197,15 +199,15 @@ export function QuantileBandChart({
                     y1={y}
                     x2={padding.left + chartWidth}
                     y2={y}
-                    stroke="#334155"
+                    className="stroke-slate-200 dark:stroke-slate-800/80"
                     strokeDasharray="3 3"
                     strokeWidth="1"
                   />
                   <text
-                    x={padding.left - 10}
-                    y={y + 4}
+                    x={padding.left - 8}
+                    y={y + 3.5}
                     textAnchor="end"
-                    className="text-[11px] fill-slate-400 font-mono"
+                    className="text-[10px] fill-slate-400 dark:fill-slate-500 font-mono"
                   >
                     {tickVal}
                   </text>
@@ -225,15 +227,15 @@ export function QuantileBandChart({
                     x1={x}
                     y1={padding.top + chartHeight}
                     x2={x}
-                    y2={padding.top + chartHeight + 6}
-                    stroke="#475569"
+                    y2={padding.top + chartHeight + 5}
+                    className="stroke-slate-300 dark:stroke-slate-700"
                     strokeWidth="1"
                   />
                   <text
                     x={x}
-                    y={padding.top + chartHeight + 20}
+                    y={padding.top + chartHeight + 16}
                     textAnchor="middle"
-                    className="text-[11px] fill-slate-400 font-mono"
+                    className="text-[10px] fill-slate-400 dark:fill-slate-500 font-mono"
                   >
                     {dateLabel}
                   </text>
@@ -248,8 +250,7 @@ export function QuantileBandChart({
                 fill="url(#quantileGrad)"
                 stroke="#6366f1"
                 strokeWidth="1"
-                strokeOpacity="0.4"
-                strokeDasharray="2 2"
+                strokeOpacity="0.35"
               />
             )}
 
@@ -258,8 +259,9 @@ export function QuantileBandChart({
               <path
                 d={medianPath}
                 fill="none"
-                stroke="#6366f1"
-                strokeWidth="2.5"
+                stroke="#4f46e5"
+                className="dark:stroke-indigo-400"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -270,9 +272,10 @@ export function QuantileBandChart({
               <path
                 d={actualPath}
                 fill="none"
-                stroke="#10b981"
-                strokeWidth="2"
-                strokeDasharray="4 4"
+                stroke="#059669"
+                className="dark:stroke-emerald-400"
+                strokeWidth="1.5"
+                strokeDasharray="3 3"
                 strokeLinecap="round"
               />
             )}
@@ -285,38 +288,38 @@ export function QuantileBandChart({
                   y1={padding.top}
                   x2={scaleX(hoverIndex)}
                   y2={padding.top + chartHeight}
-                  stroke="#94a3b8"
+                  className="stroke-slate-400 dark:stroke-slate-500"
                   strokeWidth="1"
-                  strokeDasharray="3 3"
+                  strokeDasharray="2 2"
                 />
                 <circle
                   cx={scaleX(hoverIndex)}
                   cy={scaleY(activePoint.p90)}
-                  r="3.5"
+                  r="3"
                   fill="#818cf8"
                 />
                 <circle
                   cx={scaleX(hoverIndex)}
                   cy={scaleY(activePoint.p50)}
-                  r="4.5"
-                  fill="#6366f1"
-                  stroke="#ffffff"
+                  r="4"
+                  fill="#4f46e5"
+                  className="stroke-white dark:stroke-slate-900"
                   strokeWidth="1.5"
                 />
                 <circle
                   cx={scaleX(hoverIndex)}
                   cy={scaleY(activePoint.p10)}
-                  r="3.5"
+                  r="3"
                   fill="#818cf8"
                 />
                 {typeof activePoint.actual === 'number' && (
                   <circle
                     cx={scaleX(hoverIndex)}
                     cy={scaleY(activePoint.actual)}
-                    r="4"
+                    r="3.5"
                     fill="#10b981"
-                    stroke="#ffffff"
-                    strokeWidth="1"
+                    className="stroke-white dark:stroke-slate-900"
+                    strokeWidth="1.5"
                   />
                 )}
               </g>
@@ -326,42 +329,44 @@ export function QuantileBandChart({
           {/* Interactive Floating Tooltip Card */}
           {activePoint && hoverIndex !== null && (
             <div
-              className="pointer-events-none absolute top-2 rounded-lg border border-slate-700 bg-slate-900/95 p-3 shadow-2xl backdrop-blur-md text-xs z-20 min-w-[210px]"
+              className="pointer-events-none absolute top-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 shadow-md text-xs z-20 min-w-[190px]"
               style={{
                 left: `${Math.min(
                   80,
-                  Math.max(10, (scaleX(hoverIndex) / viewBoxWidth) * 100)
+                  Math.max(15, (scaleX(hoverIndex) / viewBoxWidth) * 100)
                 )}%`,
                 transform: 'translateX(-50%)',
               }}
             >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-2">
-                <span className="font-semibold text-slate-200">Date: {activePoint.date}</span>
-                {activePoint.day && <span className="text-slate-400">Day {activePoint.day}</span>}
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1 mb-1.5">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  {activePoint.date}
+                </span>
+                {activePoint.day && (
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                    Day {activePoint.day}
+                  </span>
+                )}
               </div>
-              <div className="space-y-1.5 font-mono">
-                <div className="flex justify-between items-center text-indigo-300">
-                  <span className="text-[11px] text-slate-400">P90 (Surge):</span>
-                  <span className="font-bold">{activePoint.p90.toFixed(1)} {unitLabel}</span>
+              <div className="space-y-1 font-mono text-[11px]">
+                <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
+                  <span className="text-slate-400 dark:text-slate-500">Peak Surge:</span>
+                  <span className="font-semibold">{activePoint.p90.toFixed(1)} {unitLabel}</span>
                 </div>
-                <div className="flex justify-between items-center text-indigo-400">
-                  <span className="text-[11px] text-slate-300 font-medium">P50 (Median):</span>
-                  <span className="font-bold text-slate-100">{activePoint.p50.toFixed(1)} {unitLabel}</span>
+                <div className="flex justify-between items-center text-indigo-700 dark:text-indigo-400 font-medium">
+                  <span>Expected Sales:</span>
+                  <span className="font-bold">{activePoint.p50.toFixed(1)} {unitLabel}</span>
                 </div>
-                <div className="flex justify-between items-center text-indigo-300">
-                  <span className="text-[11px] text-slate-400">P10 (Floor):</span>
-                  <span className="font-bold">{activePoint.p10.toFixed(1)} {unitLabel}</span>
+                <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
+                  <span className="text-slate-400 dark:text-slate-500">Low Estimate:</span>
+                  <span className="font-semibold">{activePoint.p10.toFixed(1)} {unitLabel}</span>
                 </div>
                 {typeof activePoint.actual === 'number' && (
-                  <div className="flex justify-between items-center text-emerald-400 pt-1 border-t border-slate-800/80">
-                    <span className="text-[11px] text-slate-300">Actual:</span>
+                  <div className="flex justify-between items-center text-emerald-700 dark:text-emerald-400 pt-1 border-t border-slate-100 dark:border-slate-800">
+                    <span>Actual:</span>
                     <span className="font-bold">{activePoint.actual.toFixed(1)} {unitLabel}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center text-slate-400 pt-1 border-t border-slate-800/80 text-[10px]">
-                  <span>Uncertainty Span:</span>
-                  <span>{(activePoint.p90 - activePoint.p10).toFixed(1)} {unitLabel}</span>
-                </div>
               </div>
             </div>
           )}

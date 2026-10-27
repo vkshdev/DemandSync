@@ -32,42 +32,37 @@ const DEFAULT_CATEGORIES = ['Grocery', 'Apparel', 'Electronics', 'Beverages', 'H
 
 export function getRiskTier(pct: number): {
   tier: 'LOW' | 'MODERATE' | 'CRITICAL';
-  bgClass: string;
+  cellClass: string;
   textClass: string;
-  badgeClass: string;
-  borderClass: string;
 } {
   if (pct >= 50) {
     return {
       tier: 'CRITICAL',
-      bgClass: 'bg-rose-500/20 hover:bg-rose-500/35',
-      textClass: 'text-rose-400',
-      badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-      borderClass: 'border-rose-500/30',
+      cellClass:
+        'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100/80 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/50 dark:hover:bg-rose-950/50',
+      textClass: 'text-rose-700 dark:text-rose-400',
     };
   }
   if (pct >= 20) {
     return {
       tier: 'MODERATE',
-      bgClass: 'bg-amber-500/20 hover:bg-amber-500/35',
-      textClass: 'text-amber-400',
-      badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-      borderClass: 'border-amber-500/30',
+      cellClass:
+        'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100/80 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50 dark:hover:bg-amber-950/50',
+      textClass: 'text-amber-700 dark:text-amber-400',
     };
   }
   return {
     tier: 'LOW',
-    bgClass: 'bg-emerald-500/20 hover:bg-emerald-500/35',
-    textClass: 'text-emerald-400',
-    badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-    borderClass: 'border-emerald-500/30',
+    cellClass:
+      'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100/90 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800/60',
+    textClass: 'text-slate-700 dark:text-slate-300',
   };
 }
 
 export function StockoutHeatmap({
   data,
-  title = 'Store x Category Stockout Risk Matrix',
-  subtitle = 'Color-coded stockout probability across retail chain nodes',
+  title = 'Store × Category Stockout Risk Matrix',
+  subtitle = 'Prescriptive probability across retail distribution nodes',
   onCellSelect,
   className = '',
 }: StockoutHeatmapProps) {
@@ -146,30 +141,32 @@ export function StockoutHeatmap({
 
   return (
     <div
-      className={`rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl backdrop-blur-md ${className}`}
+      className={`rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121214] p-5 shadow-sm ${className}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <ShieldAlert className="h-5 w-5 text-indigo-400" />
-            <h3 className="font-semibold text-slate-100">{title}</h3>
+            <ShieldAlert className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">{title}</h3>
           </div>
-          {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
+          )}
         </div>
 
         {/* Legend */}
         <div className="flex items-center gap-3 text-xs">
-          <span className="flex items-center gap-1.5 font-medium text-emerald-400">
-            <span className="inline-block h-3 w-3 rounded bg-emerald-500/25 border border-emerald-500/40" />
+          <span className="flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-400">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600" />
             &lt; 20% (Low)
           </span>
-          <span className="flex items-center gap-1.5 font-medium text-amber-400">
-            <span className="inline-block h-3 w-3 rounded bg-amber-500/25 border border-amber-500/40" />
+          <span className="flex items-center gap-1.5 font-medium text-amber-700 dark:text-amber-400">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700" />
             20% - 49% (Moderate)
           </span>
-          <span className="flex items-center gap-1.5 font-medium text-rose-400">
-            <span className="inline-block h-3 w-3 rounded bg-rose-500/25 border border-rose-500/40" />
-            &gt;= 50% (Critical)
+          <span className="flex items-center gap-1.5 font-medium text-rose-700 dark:text-rose-400">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-rose-100 dark:bg-rose-900/40 border border-rose-300 dark:border-rose-700" />
+            ≥ 50% (Critical)
           </span>
         </div>
       </div>
@@ -178,24 +175,24 @@ export function StockoutHeatmap({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-xs">
           <thead>
-            <tr className="border-b border-slate-800">
-              <th className="py-2.5 px-3 font-semibold text-slate-400">Store Node</th>
+            <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <th className="py-2.5 px-3">Store Node</th>
               {DEFAULT_CATEGORIES.map((cat) => (
-                <th key={cat} className="py-2.5 px-3 text-center font-semibold text-slate-300">
+                <th key={cat} className="py-2.5 px-3 text-center">
                   {cat}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 font-mono">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
             {DEFAULT_STORES.map((store) => (
-              <tr key={store.id} className="hover:bg-slate-800/20 transition-colors">
-                <td className="py-2.5 px-3 font-sans font-medium text-slate-200 whitespace-nowrap">
+              <tr key={store.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                <td className="py-2 px-3 font-sans font-medium text-slate-900 dark:text-slate-200 whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    <Store className="h-4 w-4 text-slate-400 shrink-0" />
+                    <Store className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                     <div>
-                      <div>{store.name}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">{store.id}</div>
+                      <div className="text-xs">{store.name}</div>
+                      <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{store.id}</div>
                     </div>
                   </div>
                 </td>
@@ -212,20 +209,20 @@ export function StockoutHeatmap({
                     selectedCell?.storeId === store.id && selectedCell?.category === cat;
 
                   return (
-                    <td key={cat} className="p-1.5 text-center">
+                    <td key={cat} className="p-1 text-center">
                       <button
                         type="button"
                         onClick={() => handleCellClick(cell)}
-                        className={`w-full rounded-lg border py-2.5 px-2 transition-all duration-200 cursor-pointer ${
-                          tier.bgClass
-                        } ${tier.borderClass} ${
-                          isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900' : ''
+                        className={`w-full rounded-md border py-2 px-1.5 transition-all cursor-pointer ${
+                          tier.cellClass
+                        } ${
+                          isSelected ? 'ring-2 ring-slate-900 dark:ring-white ring-offset-1 dark:ring-offset-slate-900' : ''
                         }`}
                       >
-                        <div className={`text-sm font-bold ${tier.textClass}`}>
+                        <div className={`text-xs font-bold font-mono ${tier.textClass}`}>
                           {cell.riskPct.toFixed(1)}%
                         </div>
-                        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-sans mt-0.5">
+                        <div className="text-[9px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-sans mt-0.5">
                           {tier.tier}
                         </div>
                       </button>
@@ -240,28 +237,28 @@ export function StockoutHeatmap({
 
       {/* Selected Cell Detail Card */}
       {selectedCell && (
-        <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/80 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="mt-4 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div>
-            <div className="font-semibold text-slate-100 flex items-center gap-2">
+            <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
               <span>{selectedCell.storeName} ({selectedCell.storeId})</span>
-              <ChevronRight className="h-3.5 w-3.5 text-slate-500" />
-              <span className="text-indigo-400">{selectedCell.category}</span>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+              <span className="text-slate-900 dark:text-white font-bold">{selectedCell.category}</span>
             </div>
-            <div className="text-slate-400 text-[11px] mt-0.5">
-              Stockout Risk Probability: <span className="font-mono font-semibold text-slate-200">{selectedCell.riskPct.toFixed(1)}%</span>
+            <div className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">
+              Stockout Risk: <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedCell.riskPct.toFixed(1)}%</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             {selectedCell.breachedSkusCount !== undefined && selectedCell.breachedSkusCount > 0 && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400">
-                <AlertTriangle className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 font-medium text-[11px]">
+                <AlertTriangle className="h-3 w-3" />
                 <span>{selectedCell.breachedSkusCount} SKU(s) breached ROP</span>
               </div>
             )}
             {selectedCell.projectedLossUsd !== undefined && selectedCell.projectedLossUsd > 0 && (
-              <div className="font-mono text-slate-300">
-                Est. Loss: <span className="text-rose-400 font-semibold">${selectedCell.projectedLossUsd.toLocaleString()}</span>
+              <div className="font-mono text-xs text-slate-600 dark:text-slate-300">
+                Est. Loss: <span className="text-rose-700 dark:text-rose-400 font-semibold">${selectedCell.projectedLossUsd.toLocaleString()}</span>
               </div>
             )}
           </div>

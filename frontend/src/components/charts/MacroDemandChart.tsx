@@ -20,14 +20,14 @@ export function MacroDemandChart({
   macroTrend = '+4.2% projected MoM growth',
   title = 'Chain-Wide Aggregate Demand Curve',
   subtitle = '30-day macro volume projection with trend momentum',
-  height = 300,
+  height = 280,
   className = '',
 }: MacroDemandChartProps) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   const viewBoxWidth = 800;
   const viewBoxHeight = height;
-  const padding = { top: 24, right: 32, bottom: 44, left: 60 };
+  const padding = { top: 20, right: 28, bottom: 40, left: 56 };
   const chartWidth = viewBoxWidth - padding.left - padding.right;
   const chartHeight = viewBoxHeight - padding.top - padding.bottom;
 
@@ -113,26 +113,30 @@ export function MacroDemandChart({
 
   return (
     <div
-      className={`rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl backdrop-blur-md ${className}`}
+      className={`rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121214] p-5 shadow-sm ${className}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-sky-400" />
-            <h3 className="font-semibold text-slate-100">{title}</h3>
+            <BarChart3 className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">{title}</h3>
           </div>
-          {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <div className="text-[11px] text-slate-400">Total 30-Day Demand</div>
-            <div className="text-base font-bold font-mono text-slate-100">
+            <div className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 tracking-wider">
+              Total 30D Demand
+            </div>
+            <div className="text-base font-bold font-mono text-slate-900 dark:text-slate-100">
               {totalUnits.toLocaleString()} units
             </div>
           </div>
           {macroTrend && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-medium">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
               <TrendingUp className="h-3.5 w-3.5" />
               <span>{macroTrend}</span>
             </div>
@@ -141,7 +145,7 @@ export function MacroDemandChart({
       </div>
 
       {data.length === 0 ? (
-        <div className="flex h-56 items-center justify-center rounded-lg border border-dashed border-slate-800 text-sm text-slate-500">
+        <div className="flex h-56 items-center justify-center rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-400">
           No aggregate macro data loaded
         </div>
       ) : (
@@ -154,8 +158,8 @@ export function MacroDemandChart({
           >
             <defs>
               <linearGradient id="macroGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.25" />
-                <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.0" />
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
               </linearGradient>
             </defs>
 
@@ -169,15 +173,15 @@ export function MacroDemandChart({
                     y1={y}
                     x2={padding.left + chartWidth}
                     y2={y}
-                    stroke="#334155"
+                    className="stroke-slate-200 dark:stroke-slate-800/80"
                     strokeDasharray="3 3"
                     strokeWidth="1"
                   />
                   <text
-                    x={padding.left - 10}
-                    y={y + 4}
+                    x={padding.left - 8}
+                    y={y + 3.5}
                     textAnchor="end"
-                    className="text-[11px] fill-slate-400 font-mono"
+                    className="text-[10px] fill-slate-400 dark:fill-slate-500 font-mono"
                   >
                     {val.toLocaleString()}
                   </text>
@@ -197,15 +201,15 @@ export function MacroDemandChart({
                     x1={x}
                     y1={padding.top + chartHeight}
                     x2={x}
-                    y2={padding.top + chartHeight + 6}
-                    stroke="#475569"
+                    y2={padding.top + chartHeight + 5}
+                    className="stroke-slate-300 dark:stroke-slate-700"
                     strokeWidth="1"
                   />
                   <text
                     x={x}
-                    y={padding.top + chartHeight + 20}
+                    y={padding.top + chartHeight + 16}
                     textAnchor="middle"
-                    className="text-[11px] fill-slate-400 font-mono"
+                    className="text-[10px] fill-slate-400 dark:fill-slate-500 font-mono"
                   >
                     {dateLabel}
                   </text>
@@ -221,8 +225,8 @@ export function MacroDemandChart({
               <path
                 d={linePath}
                 fill="none"
-                stroke="#0ea5e9"
-                strokeWidth="2.5"
+                stroke="#2563eb"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -236,16 +240,16 @@ export function MacroDemandChart({
                   y1={padding.top}
                   x2={scaleX(hoverIndex)}
                   y2={padding.top + chartHeight}
-                  stroke="#94a3b8"
+                  className="stroke-slate-400 dark:stroke-slate-500"
                   strokeWidth="1"
-                  strokeDasharray="3 3"
+                  strokeDasharray="2 2"
                 />
                 <circle
                   cx={scaleX(hoverIndex)}
                   cy={scaleY(activePoint.p50)}
-                  r="5"
-                  fill="#0ea5e9"
-                  stroke="#ffffff"
+                  r="4.5"
+                  fill="#2563eb"
+                  className="stroke-white dark:stroke-slate-900"
                   strokeWidth="2"
                 />
               </g>
@@ -255,23 +259,23 @@ export function MacroDemandChart({
           {/* Hover Tooltip */}
           {activePoint && hoverIndex !== null && (
             <div
-              className="pointer-events-none absolute top-2 rounded-lg border border-slate-700 bg-slate-900/95 p-3 shadow-2xl backdrop-blur-md text-xs z-20 min-w-[170px]"
+              className="pointer-events-none absolute top-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 shadow-md text-xs z-20 min-w-[150px]"
               style={{
                 left: `${Math.min(
-                  80,
-                  Math.max(10, (scaleX(hoverIndex) / viewBoxWidth) * 100)
+                  85,
+                  Math.max(15, (scaleX(hoverIndex) / viewBoxWidth) * 100)
                 )}%`,
                 transform: 'translateX(-50%)',
               }}
             >
-              <div className="font-semibold text-slate-200 border-b border-slate-800 pb-1 mb-1.5">
+              <div className="font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-1 mb-1">
                 {activePoint.date}
               </div>
-              <div className="font-mono space-y-1">
-                <div className="flex justify-between text-sky-400">
-                  <span className="text-slate-400">Demand:</span>
-                  <span className="font-bold">{activePoint.p50.toFixed(1)} units</span>
-                </div>
+              <div className="font-mono flex justify-between text-slate-700 dark:text-slate-300">
+                <span className="text-slate-400 dark:text-slate-500">Demand:</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400">
+                  {activePoint.p50.toFixed(1)} units
+                </span>
               </div>
             </div>
           )}

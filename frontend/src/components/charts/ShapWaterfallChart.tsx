@@ -36,8 +36,8 @@ const FEATURE_NAME_MAP: Record<string, string> = {
 
 export function ShapWaterfallChart({
   drivers = [],
-  title = 'TreeSHAP Demand Swing Drivers',
-  subtitle = 'Feature attributions ranked by impact magnitude on median (P50) forecast',
+  title = 'Key Demand Drivers',
+  subtitle = 'Factors ranked by impact magnitude on projected sales volume',
   maxDisplay = 6,
   className = '',
 }: ShapWaterfallChartProps) {
@@ -63,34 +63,36 @@ export function ShapWaterfallChart({
 
   return (
     <div
-      className={`rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl backdrop-blur-md ${className}`}
+      className={`rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121214] p-5 shadow-sm ${className}`}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <Cpu className="h-5 w-5 text-indigo-400" />
-            <h3 className="font-semibold text-slate-100">{title}</h3>
+            <Cpu className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">{title}</h3>
           </div>
-          {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
+          )}
         </div>
         <div className="flex items-center gap-3 text-xs">
-          <span className="flex items-center gap-1 font-medium text-emerald-400">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-500" />
+          <span className="flex items-center gap-1 font-medium text-emerald-700 dark:text-emerald-400">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-600 dark:bg-emerald-500" />
             Positive Lift
           </span>
-          <span className="flex items-center gap-1 font-medium text-rose-400">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-rose-500" />
+          <span className="flex items-center gap-1 font-medium text-rose-700 dark:text-rose-400">
+            <span className="inline-block h-2 w-2 rounded-full bg-rose-600 dark:bg-rose-500" />
             Negative Drag
           </span>
         </div>
       </div>
 
       {sortedDrivers.length === 0 ? (
-        <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-slate-800 text-sm text-slate-500">
-          No SHAP attribution records for this item
+        <div className="flex h-44 items-center justify-center rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-400">
+          No demand driver records for this item
         </div>
       ) : (
-        <div className="space-y-3.5 pt-2">
+        <div className="space-y-2.5 pt-1">
           {sortedDrivers.map((driver, idx) => {
             const isPositive = driver.attribution_value >= 0;
             const pctOfMax = (Math.abs(driver.attribution_value) / maxMagnitude) * 100;
@@ -99,18 +101,18 @@ export function ShapWaterfallChart({
             return (
               <div
                 key={idx}
-                className="group rounded-lg bg-slate-950/40 p-2.5 transition-colors hover:bg-slate-950/70 border border-slate-800/60"
+                className="group rounded-md bg-slate-50 dark:bg-slate-900/60 p-2.5 transition-colors hover:bg-slate-100/80 dark:hover:bg-slate-900 border border-slate-200/80 dark:border-slate-800/60"
               >
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-medium text-slate-200">
+                  <span className="font-medium text-slate-800 dark:text-slate-200">
                     {formatFeatureName(driver.feature)}
                   </span>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`inline-flex items-center gap-1 font-mono font-semibold text-[11px] px-1.5 py-0.5 rounded ${
+                      className={`inline-flex items-center gap-1 font-mono font-medium text-[11px] px-1.5 py-0.5 rounded border ${
                         isPositive
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50'
+                          : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/50'
                       }`}
                     >
                       {isPositive ? (
@@ -120,7 +122,7 @@ export function ShapWaterfallChart({
                       )}
                       {driver.impact || `${isPositive ? '+' : ''}${(driver.attribution_value * 100).toFixed(1)}%`}
                     </span>
-                    <span className="font-mono text-slate-400 text-[11px]">
+                    <span className="font-mono text-slate-500 dark:text-slate-400 text-[11px]">
                       {isPositive ? '+' : ''}
                       {driver.attribution_value.toFixed(3)}
                     </span>
@@ -128,17 +130,17 @@ export function ShapWaterfallChart({
                 </div>
 
                 {/* Waterfall Magnitude Bar */}
-                <div className="relative h-2 w-full rounded-full bg-slate-800 overflow-hidden">
-                  <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600 z-10" />
+                <div className="relative h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                  <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-400 dark:bg-slate-600 z-10" />
 
                   {isPositive ? (
                     <div
-                      className="absolute top-0 bottom-0 left-1/2 rounded-r-full bg-emerald-500 transition-all duration-300"
+                      className="absolute top-0 bottom-0 left-1/2 rounded-r-full bg-emerald-600 dark:bg-emerald-500 transition-all duration-200 motion-reduce:transition-none"
                       style={{ width: `${barWidth / 2}%` }}
                     />
                   ) : (
                     <div
-                      className="absolute top-0 bottom-0 rounded-l-full bg-rose-500 transition-all duration-300"
+                      className="absolute top-0 bottom-0 rounded-l-full bg-rose-600 dark:bg-rose-500 transition-all duration-200 motion-reduce:transition-none"
                       style={{
                         right: '50%',
                         width: `${barWidth / 2}%`,
@@ -153,12 +155,12 @@ export function ShapWaterfallChart({
       )}
 
       {/* Summary caption */}
-      <div className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-3 text-[11px] text-slate-400">
+      <div className="mt-3.5 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-2.5 text-[11px] text-slate-500 dark:text-slate-400">
         <span className="flex items-center gap-1">
-          <Layers className="h-3.5 w-3.5 text-indigo-400" />
-          Additive baseline decomposition relative to unconditional sample mean
+          <Layers className="h-3.5 w-3.5 text-slate-400" />
+          Additive baseline decomposition relative to sample mean
         </span>
-        <span className="font-mono">Top {sortedDrivers.length} features shown</span>
+        <span className="font-mono">Top {sortedDrivers.length} drivers</span>
       </div>
     </div>
   );
