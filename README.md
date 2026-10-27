@@ -1,94 +1,75 @@
 # DemandSync
 
-> **Smart, private demand forecasting and inventory replenishment for retail stores.**
+> **Smart AI based demand forecasting and inventory replenishment for retail stores.**
 
-DemandSync is an intelligent retail inventory assistant. It helps store managers and supply chain teams decide **when to reorder stock, how much to order, and how to avoid running out of products** without tying up too much cash in excess inventory.
+Every retail business from small shops to multi-store chains faces the exact same expensive balancing act every single day:
 
-Everything runs **100% locally on the computer** your sales numbers, inventory levels, and prices stays in your machine.
+1. **Ordering Too Little (Stockouts)**: If customer demand surges and your shelves are empty, customers walk away, buy from a competitor, and you lose revenue you can never recover.
+2. **Ordering Too Much (Overstocking)**: Excess inventory ties up valuable cash flow in storage. You pay higher warehousing fees, risk product expiration or damage, and eventually have to sell items at steep discount markdowns that destroy your profits.
+
+Most legacy inventory systems try to guess demand with a **single flat number**: *"You will sell 50 units next Tuesday."*  
+Real retail does not work like that. Sales fluctuate with weekend traffic, seasonal weather shifts, supplier delivery delays, and promotional discounts.
+
+**DemandSync replaces guesswork with smart range-based forecasting, automatic stock calculations, and a private on-device AI assistant.**
+
 ---
 
-## The Problem DemandSync Solves
+# How DemandSync Works
 
-Every retail business faces the same costly dilemma:
+Instead of guessing a single number, DemandSync gives store managers three realistic scenarios:
 
-* **Order too little:** Shelves go empty, customers walk away frustrated, and you lose revenue you can never get back.
-* **Order too much:** Cash sits trapped in unsold boxes, warehouse storage fees climb, and products risk expiring or being marked down at a loss.
+| Forecast Type | What It Means | How It Helps You |
+| :--- | :--- | :--- |
+| **Minimum Expected Sales** | The low baseline estimate | Protects cash flow so you don't over-order slow-moving inventory. |
+| **Most Likely Sales** | The expected baseline volume | Guides routine, cost-effective weekly inventory replenishment. |
+| **Peak Surge Potential** | High customer surge capacity | Prepares your store for holiday rushes, weekend spikes, or bad weather runs. |
 
-Most inventory software only provides a single average guess: *"You will sell 100 units next week."* But real life is messy. What if a heatwave hits? What if competitor prices drop? What if your supplier takes an extra 4 days to deliver?
-
-DemandSync replaces guesswork with **probabilistic forecasting, automated inventory math, and an on-device AI copilot**.
+When inventory runs low, DemandSync **automatically calculates exactly how many units you need to reorder** and generates a ready-to-use purchase order with a single click.
 
 ---
 
 ## Key Features
 
-### 1. Forecasts with Real-World Confidence Ranges
-Instead of giving you a single number, DemandSync predicts three realistic scenarios:
-* **Conservative ($P_{10}$):** The lowest demand you can reasonably expect (protects your cash flow).
-* **Expected ($P_{50}$):** The most likely sales volume.
-* **Peak ($P_{90}$):** High-demand surge capacity (ensures you don't stock out during holiday spikes).
+### 1. Smart Reorder Alerts & Safety Buffers
+- **Reorder Thresholds**: Automatically calculates the exact inventory number where a new supplier order must be placed.
+- **Safety Reserve Buffers**: Calibrates an extra stock cushion based on supplier delivery variability to protect your store from running out during shipping delays.
+- **Out of Stock Risk Scores**: Alert managers immediately when a product breaches safety buffers.
 
-### 2. Automatic Reorder Alerts & Safety Stock Math
-DemandSync continuously monitors your stock and calculates:
-* **Reorder Point (ROP):** Exactly when you need to place a purchase order based on supplier lead times.
-* **Safety Stock:** A mathematically calibrated buffer to protect against delivery delays or sudden demand surges.
-* **Stockout Risk Scores:** Visual alerts highlighting which items need immediate attention.
+### 2. "What-If" Scenario Simulator
+Test real-world business scenarios before spending your budget:
+- *What happens to customer demand if we run a 20% discount promotion?*
+- *How will sales shift if a sudden winter storm or heatwave hits this region?*
+- *What is our stockout exposure if our overseas supplier is delayed by 7 days?*
 
-### 3. "What-If" Scenario Simulator
-Test business ideas before spending any money:
-* What happens to sales if we offer a 15% discount?
-* How will demand change if it rains all weekend?
-* What is our stockout risk if the supplier takes 7 days instead of 3?
+### 3. 1-Click Purchase Orders
+Directly converts inventory deficit alerts into enterprise purchase orders:
+- Includes authorized vendors, unit costs, payment terms (Net 30), and delivery expectations.
 
-### 4. Transparent AI
-No "black boxes." For every forecast, DemandSync tells you *why* demand is going up or down—whether it is driven by day-of-week trends, weather conditions, active discounts, or seasonality.
-
-### 5. Private On-Device AI Copilot
-DemandSync includes an embedded AI assistant powered by **Qwen2.5-1.5B** running directly on your CPU:
-* Generates clear, plain-English executive briefings for store managers.
-* Answers operational questions (e.g., *"Which items are at risk of stockout this week?"*).
-* Zero cloud connection required; completely private and air-gapped.
+### 4. On-Device DemandSync Assistant
+Includes a floating AI assistant available in the bottom-right corner of any page:
+- **Fully Local Model**: Runs on your computer's local CPU using high-speed 4-bit quantization.
+- **Executive Summaries**: Summarizes store inventory risks, identifies top items requiring replenishment, and gives straightforward action plans.
+- **Resilient Fallback**: Seamlessly falls back to local business rules so you always get reliable inventory guidance.
 
 ---
 
-## Live Dataset
+## Live Data & Store Network
 
-DemandSync comes pre-loaded with a realistic retail benchmark dataset from Kaggle comprising **73,100 daily store records** across 5 stores (`S001`–`S005`) and 20 product SKUs (`P0001`–`P0020`):
+Currently DemandSync includes a benchmark multi-store dataset with **73,100 clean daily sales records** across 5 regional stores and 20 product categories:
 
-| Column | Description |
-| :--- | :--- |
-| **Date** | Daily timeline from 2022 to 2024 |
-| **Store ID** | Identifier for the store (`S001` to `S005`) |
-| **Product ID** | SKU identifier (`P0001` to `P0020`) |
-| **Category** | Product category (Groceries, Electronics, Toys, Clothing, etc.) |
-| **Region** | Geographic region (North, South, East, West) |
-| **Inventory Level** | On-hand physical stock count at store opening |
-| **Units Sold** | Actual customer purchases on that day |
-| **Units Ordered** | Replenishment shipments ordered from suppliers |
-| **Demand Forecast** | Baseline reference forecast |
-| **Price** | Regular retail unit price |
-| **Discount** | Active promotional discount percentage |
-| **Weather Condition** | Daily local weather (Sunny, Rainy, Snowy, Cloudy) |
-| **Holiday / Promotion** | Indicator for holidays and marketing events |
-| **Competitor Pricing** | Daily competitor price for identical products |
-| **Seasonality** | Seasonal indicator (Autumn, Winter, Spring, Summer) |
+- **Store S001**: Chicago Downtown (High Foot Traffic Urban Hub)
+- **Store S002**: Dallas Metro (Suburban High-Volume Center)
+- **Store S003**: New York Manhattan (Dense Foot Traffic Flagship)
+- **Store S004**: Denver Foothills (Cold-Weather Regional Hub)
+- **Store S005**: Miami Coastal (Warm-Weather Coastal Market)
 
-All data is stored and indexed in a local **DuckDB** columnar database for sub-10ms query speeds.
+All records, inventory counts, and price histories are stored locally in an embedded **DuckDB** columnar database, giving you sub-10ms query responses without running database servers.
 
 ---
 
-## Product Tour: What You Will See
+## System Architecture
 
-* **Executive Overview (`/`):** Summary cards showing total active inventory, projected daily revenue, stockout risk distribution, and macro sales trends.
-* **Product Explorer (`/explorer`):** Filter by store and product. View historical sales, 30-day forecast confidence ribbons ($P_{10}$ to $P_{90}$), and key sales drivers.
-* **What-If Simulator (`/simulator`):** Interactive sliders to change promotional discounts, test bad weather events, or simulate supplier shipping delays.
-* **Inventory & Alerts (`/inventory`):** Color-coded risk heatmap showing products that have breached their Reorder Point and need attention today.
-* **AI Copilot Drawer:** Click the Copilot button anywhere in the app to ask questions and generate instant query in plain-English.
+For complete engineering details, see:
+ **[Architecture & Engineering Blueprint](architecture.md)**
 
 ---
-
-## For technical details: 
-[Architecture Blueprint](architecture.md): System diagrams, relational schema, LightGBM multi-quantile regression, safety stock math, and copilot mechanics.
-
----
-
