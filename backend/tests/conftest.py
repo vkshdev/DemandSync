@@ -197,7 +197,7 @@ def block_external_sockets(monkeypatch):
 
     def guarded_connect(self, address):
         host, port = address[0], address[1]
-        if host in ("127.0.0.1", "localhost", "testserver"):
+        if host in ("127.0.0.1", "localhost", "testserver", "::1", "::ffff:127.0.0.1"):
             return orig_connect(self, address)
         raise ConnectionRefusedError(
             f"Zero egress policy: blocked external connection attempt to {host}:{port}"

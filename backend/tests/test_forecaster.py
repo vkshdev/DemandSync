@@ -151,3 +151,60 @@ def test_forecaster_intermittent_demand_handling():
         preds = model.predict(df)
         assert losses["p50"] >= 0.0
         assert not np.isnan(preds["p50"]).any()
+
+
+def test_evaluate_backtest_zero_leakage_and_metrics():
+    """Validates chronological out-of-sample backtest with zero leakage across 30-day cutoff."""
+    from datetime import date, timedelta
+    from app.ml.forecaster import evaluate_backtest
+
+    # Construct 100 days of synthetic daily feature matrix
+    start_date = date(2024, 1, 1)
+    dates = [(start_date + timedelta(days=i)).isoformat() for i in range(100)]
+    np.random.seed(42)
+    sales = [float(20 + (i % 7) * 2 + int(np.random.normal(0, 2))) for i in range(100)]
+
+    data = {
+        "date": dates,
+        "sales": sales,
+        "day_of_week": [(i % 7) + 1 for i in range(100)],
+        "day_of_month": [(i % 28) + 1 for i in range(100)],
+        "month": [1] * 100,
+        "is_weekend": [1 if (i % 7) in (5, 6) else 0 for i in range(100)],
+        "discount_pct": [0.0] * 100,
+        "promo_active": [0] * 100,
+        "temperature_celsius": [20.0] * 100,
+        "precipitation_mm": [0.0] * 100,
+        "extreme_weather_flag": [0] * 100,
+        "sales_lag_1": [20.0] * 100,
+        "sales_lag_7": [20.0] * 100,
+        "sales_lag_14": [20.0] * 100,
+        "sales_lag_28": [20.0] * 100,
+        "sales_roll_mean_7": [20.0] * 100,
+        "sales_roll_std_7": [1.0] * 100,
+        "sales_roll_mean_28": [20.0] * 100,
+        "sales_roll_min_7": [15.0] * 100,
+        "sales_roll_max_7": [30.0] * 100,
+    }
+    df = pl.DataFrame(data)
+
+    res = evaluate_backtest(df, target_col="sales", test_days=30)
+
+    # Verification: Exactly 30 test days
+    assert res["metrics"]["test_days"] == 30
+    assert len(res["time_series"]) == 30
+    assert res["cutoff_date"] == dates[70]  # Cutoff at 100 - 30 = 70th index
+
+    # Verify first test date is >= cutoff
+    assert res["time_series"][0]["date"] >= res["cutoff_date"]
+
+    # Metrics sanity checks
+    metrics = res["metrics"]
+    assert 0.0 <= metrics["wape_pct"] <= 100.0
+    assert -100.0 <= metrics["bias_pct"] <= 100.0
+    assert metrics["mase"] >= 0.0
+    assert metrics["pinball_loss_p10"] >= 0.0
+    assert metrics["pinball_loss_p50"] >= 0.0
+    assert metrics["pinball_loss_p90"] >= 0.0
+    assert metrics["tracking_signal_status"] in ("OPTIMAL", "OVER_FORECASTING", "UNDER_FORECASTING")
+

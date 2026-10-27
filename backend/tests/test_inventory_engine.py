@@ -160,3 +160,93 @@ def test_inventory_invalid_inputs_raise_errors():
 
     with pytest.raises(ValueError):
         ss_fn(mean_lead_time=4.0, std_lead_time=1.0, mean_demand=10.0, std_demand=2.0, service_level=0.0)
+
+
+def test_replenishment_quantity_formula_and_moq():
+    """Replenishment formula max(EOQ, (ROP + SS) - Current Stock) constrained by MOQ and case packs."""
+    from app.services.inventory_engine import calculate_replenishment_quantity
+
+    # Case 1: Deficit dominates EOQ
+    # Current stock = 20, ROP = 80, SS = 40 -> Target = 120, Deficit = 100
+    # EOQ = 50, MOQ = 10, case_pack = 10
+    # max(50, 100) = 100, max(100, 10) = 100
+    qty = calculate_replenishment_quantity(
+        current_stock=20,
+        safety_stock=40,
+        reorder_point=80,
+        eoq=50,
+        min_order_qty=10,
+        case_pack=10,
+    )
+    assert qty == 100
+
+    # Case 2: EOQ dominates Deficit
+    # Current stock = 110, ROP = 80, SS = 40 -> Target = 120, Deficit = 10
+    # EOQ = 80, MOQ = 10, case_pack = 10 -> max(80, 10) = 80
+    qty_eoq = calculate_replenishment_quantity(
+        current_stock=110,
+        safety_stock=40,
+        reorder_point=80,
+        eoq=80,
+        min_order_qty=10,
+        case_pack=10,
+    )
+    assert qty_eoq == 80
+
+    # Case 3: MOQ constraint dominates
+    # Deficit = 5, EOQ = 10, MOQ = 50 -> max(10, 5) = 10 -> max(10, 50) = 50
+    qty_moq = calculate_replenishment_quantity(
+        current_stock=115,
+        safety_stock=40,
+        reorder_point=80,
+        eoq=10,
+        min_order_qty=50,
+        case_pack=10,
+    )
+    assert qty_moq == 50
+
+    # Case 4: Case pack rounding (e.g. qty 42 with case_pack 10 -> rounds up to 50)
+    qty_pack = calculate_replenishment_quantity(
+        current_stock=10,
+        safety_stock=25,
+        reorder_point=25,
+        eoq=42,
+        min_order_qty=1,
+        case_pack=10,
+    )
+    assert qty_pack == 50
+    assert isinstance(qty_pack, int)
+
+
+def test_generate_purchase_order_and_erp_transmission():
+    """Verify end-to-end PO creation payload and EDI 850 mock transmission."""
+    from app.schemas.inventory import PurchaseOrderRequest, ERPTransmitRequest
+    from app.services.inventory_engine import InventoryEngine
+
+    po_req = PurchaseOrderRequest(
+        sku_id="SKU-001",
+        store_id="STORE-001",
+        current_stock=15,
+        safety_stock_units=50,
+        reorder_point_units=85,
+        eoq_units=75,
+        min_order_qty=20,
+        unit_cost_usd=18.50,
+    )
+    po_resp = InventoryEngine.generate_purchase_order(po_req)
+    assert po_resp.po_number.startswith("PO-2026-")
+    assert po_resp.store_id == "STORE-001"
+    assert len(po_resp.line_items) == 1
+    assert po_resp.line_items[0].sku_id == "SKU-001"
+    assert po_resp.total_units > 0
+    assert po_resp.total_cost_usd == round(po_resp.total_units * 18.50, 2)
+    assert po_resp.status == "DRAFT"
+
+    # ERP Transmit
+    tx_req = ERPTransmitRequest(po_number=po_resp.po_number, erp_system="SAP_S4HANA", po_data=po_resp)
+    tx_resp = InventoryEngine.transmit_purchase_order_to_erp(tx_req)
+    assert tx_resp.status == "TRANSMITTED_SUCCESS"
+    assert tx_resp.edi_control_number.startswith("EDI850-")
+    assert tx_resp.erp_transaction_id.startswith("ERP-SAP-")
+    assert "successfully registered" in tx_resp.message
+
