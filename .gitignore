@@ -60,9 +60,9 @@ Thumbs.db
 *.pkl
 *.joblib
 *.parquet
-*.duckdb
+#*.duckdb
 *.sqlite3
-backend/data/*.csv
+#backend/data/*.csv
 !backend/data/sample_*.csv
 
 .ruff_cache/
