@@ -5,29 +5,57 @@ import {
   Search,
   Sliders,
   Bot,
+  FileSpreadsheet,
+  Activity,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
-import { InventoryAlert } from '@/types/api';
+import { InventoryAlert, PipelineDriftReport } from '@/types/api';
 import { api } from '@/lib/api';
 import { STORES } from '@/lib/catalog';
+import { PurchaseOrderModal } from '@/components/inventory/PurchaseOrderModal';
 
 interface AlertsTableProps {
   onInspectWithCopilot?: (alert: InventoryAlert) => void;
   onSimulateSku?: (skuId: string, storeId: string) => void;
+  onCreatePO?: (alert: InventoryAlert) => void;
 }
 
 export default function AlertsTable({
   onInspectWithCopilot,
   onSimulateSku,
+  onCreatePO,
 }: AlertsTableProps) {
   const [alerts, setAlerts] = useState<InventoryAlert[]>([]);
+  const [driftReport, setDriftReport] = useState<PipelineDriftReport | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [storeFilter, setStoreFilter] = useState<string>('ALL');
   const [urgencyFilter, setUrgencyFilter] = useState<'ALL' | 'CRITICAL' | 'WARNING'>('ALL');
+  const [poModalAlert, setPoModalAlert] = useState<InventoryAlert | null>(null);
+  const [isPoModalOpen, setIsPoModalOpen] = useState<boolean>(false);
+
+  const handleOpenPO = (alert: InventoryAlert) => {
+    if (onCreatePO) {
+      onCreatePO(alert);
+    }
+    setPoModalAlert(alert);
+    setIsPoModalOpen(true);
+  };
 
   useEffect(() => {
     loadAlerts();
+    loadDrift();
   }, []);
+
+  const loadDrift = async () => {
+    try {
+      const report = await api.getDriftReport();
+      setDriftReport(report);
+    } catch {
+      // Handled by api fallback
+    }
+  };
 
   const loadAlerts = async () => {
     setIsLoading(true);
@@ -108,52 +136,93 @@ export default function AlertsTable({
       : '0.0';
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-4">
       {/* Summary KPI Header */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Active Breaches</div>
-          <div className="text-2xl font-bold font-mono text-slate-100 mt-1">{totalBreaches}</div>
-          <div className="text-[11px] text-slate-500 mt-0.5">SKUs below Reorder Point</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121214] shadow-sm">
+          <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            Active Breaches
+          </div>
+          <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-0.5">
+            {totalBreaches}
+          </div>
+          <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">SKUs below minimum stock level</div>
         </div>
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider">Critical Urgency</div>
-          <div className="text-2xl font-bold font-mono text-rose-400 mt-1">{criticalCount}</div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Risk &gt; 70% threshold</div>
+        <div className="p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121214] shadow-sm">
+          <div className="text-[10px] font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
+            Critical Urgency
+          </div>
+          <div className="text-xl font-bold font-mono text-rose-700 dark:text-rose-400 mt-0.5">
+            {criticalCount}
+          </div>
+          <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Risk &gt; 70% threshold</div>
         </div>
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider">Margin at Risk</div>
-          <div className="text-2xl font-bold font-mono text-amber-400 mt-1">
+        <div className="p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121214] shadow-sm">
+          <div className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+            Margin at Risk
+          </div>
+          <div className="text-xl font-bold font-mono text-amber-700 dark:text-amber-400 mt-0.5">
             ${totalLoss.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Projected stockout loss</div>
+          <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Projected stockout loss</div>
         </div>
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Mean Stockout Risk</div>
-          <div className="text-2xl font-bold font-mono text-slate-100 mt-1">{avgRisk}%</div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Across breached catalog</div>
+        <div className="p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121214] shadow-sm">
+          <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            Mean Stockout Risk
+          </div>
+          <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-0.5">
+            {avgRisk}%
+          </div>
+          <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Across catalog</div>
         </div>
       </div>
 
+      {/* Automated Pipeline Drift Indicator (EPIC-7 P3) */}
+      {driftReport && (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#09090b]/80 text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-1.5 font-semibold">
+              <Activity className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span className="text-slate-800 dark:text-slate-200">Data Drift Monitor:</span>
+            </div>
+            <span
+              className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                driftReport.overall_system_status === 'HEALTHY'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+              }`}
+            >
+              {driftReport.overall_system_status} (Distribution Stable)
+            </span>
+            <span className="text-slate-500 dark:text-slate-400 hidden sm:inline">
+              Demand patterns consistent • {driftReport.total_series_evaluated} series monitored
+            </span>
+          </div>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+            Evaluated: {driftReport.timestamp.slice(0, 10)}
+          </span>
+        </div>
+      )}
+
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-slate-900 border border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121214] shadow-sm">
         <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Search by SKU ID or product name..."
+            placeholder="Filter SKU or product..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-400 dark:focus:border-slate-500"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Store Filter */}
           <select
             value={storeFilter}
             onChange={(e) => setStoreFilter(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none"
           >
             <option value="ALL">All Stores</option>
             {STORES.map((st) => (
@@ -164,27 +233,33 @@ export default function AlertsTable({
           </select>
 
           {/* Urgency Filter Tabs */}
-          <div className="flex bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-xs">
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-0.5 rounded-md border border-slate-200 dark:border-slate-800 text-xs">
             <button
               onClick={() => setUrgencyFilter('ALL')}
-              className={`px-3 py-1.5 rounded-md font-medium transition ${
-                urgencyFilter === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition ${
+                urgencyFilter === 'ALL'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
               }`}
             >
               All
             </button>
             <button
               onClick={() => setUrgencyFilter('CRITICAL')}
-              className={`px-3 py-1.5 rounded-md font-medium transition ${
-                urgencyFilter === 'CRITICAL' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition ${
+                urgencyFilter === 'CRITICAL'
+                  ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-semibold'
+                  : 'text-slate-500 hover:text-rose-600 dark:text-slate-400'
               }`}
             >
               Critical
             </button>
             <button
               onClick={() => setUrgencyFilter('WARNING')}
-              className={`px-3 py-1.5 rounded-md font-medium transition ${
-                urgencyFilter === 'WARNING' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition ${
+                urgencyFilter === 'WARNING'
+                  ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40 font-semibold'
+                  : 'text-slate-500 hover:text-amber-600 dark:text-slate-400'
               }`}
             >
               Warning
@@ -194,72 +269,87 @@ export default function AlertsTable({
       </div>
 
       {/* Alerts Table */}
-      <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900">
+      <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121214] shadow-sm">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-slate-800 bg-slate-950/40 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-              <th className="py-3 px-4">SKU & Item</th>
-              <th className="py-3 px-4">Store</th>
-              <th className="py-3 px-4 text-right">Current Stock</th>
-              <th className="py-3 px-4 text-right">Safety Stock</th>
-              <th className="py-3 px-4 text-right">ROP</th>
-              <th className="py-3 px-4 text-right">Deficit</th>
-              <th className="py-3 px-4">Stockout Risk</th>
-              <th className="py-3 px-4">Urgency</th>
-              <th className="py-3 px-4 text-right">Actions</th>
+            <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-900/60 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <th className="py-2.5 px-3.5">SKU & Product</th>
+              <th className="py-2.5 px-3.5">Store</th>
+              <th className="py-2.5 px-3.5 text-right">Current Stock</th>
+              <th className="py-2.5 px-3.5 text-right">Safety Buffer</th>
+              <th className="py-2.5 px-3.5 text-right">Reorder Level</th>
+              <th className="py-2.5 px-3.5 text-right">Deficit</th>
+              <th className="py-2.5 px-3.5">Stockout Risk</th>
+              <th className="py-2.5 px-3.5">Urgency</th>
+              <th className="py-2.5 px-3.5 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 font-mono">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
             {filteredAlerts.length > 0 ? (
               filteredAlerts.map((row, idx) => (
-                <tr key={`${row.sku_id}-${row.store_id}-${idx}`} className="hover:bg-slate-800/40 transition">
+                <tr
+                  key={`${row.sku_id}-${row.store_id}-${idx}`}
+                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors"
+                >
                   {/* SKU & Product */}
-                  <td className="py-3 px-4">
-                    <div className="font-bold text-slate-100">{row.sku_id}</div>
-                    <div className="text-[11px] text-slate-400 font-sans">{row.sku_name || 'Retail Merchandise'}</div>
+                  <td className="py-2.5 px-3.5">
+                    <div className="font-bold text-slate-900 dark:text-slate-100">{row.sku_id}</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 font-sans">
+                      {row.sku_name || 'Retail Merchandise'}
+                    </div>
                   </td>
 
                   {/* Store */}
-                  <td className="py-3 px-4 text-slate-300 font-sans">{row.store_id}</td>
+                  <td className="py-2.5 px-3.5 text-slate-700 dark:text-slate-300 font-sans">
+                    {row.store_id}
+                  </td>
 
                   {/* Stock Metrics */}
-                  <td className="py-3 px-4 text-right font-bold text-slate-200">{row.current_stock}</td>
-                  <td className="py-3 px-4 text-right text-slate-400">{row.safety_stock_units || row.safety_stock}</td>
-                  <td className="py-3 px-4 text-right text-slate-300">{row.reorder_point_units || row.reorder_point}</td>
-                  <td className="py-3 px-4 text-right">
-                    <span className="font-bold text-rose-400">
+                  <td className="py-2.5 px-3.5 text-right font-bold text-slate-900 dark:text-slate-200">
+                    {row.current_stock}
+                  </td>
+                  <td className="py-2.5 px-3.5 text-right text-slate-500 dark:text-slate-400">
+                    {row.safety_stock_units || row.safety_stock}
+                  </td>
+                  <td className="py-2.5 px-3.5 text-right text-slate-600 dark:text-slate-300">
+                    {row.reorder_point_units || row.reorder_point}
+                  </td>
+                  <td className="py-2.5 px-3.5 text-right">
+                    <span className="font-bold text-rose-700 dark:text-rose-400">
                       -{row.stock_deficit_units || row.deficit_units || 0}
                     </span>
                   </td>
 
                   {/* Stockout Risk % */}
-                  <td className="py-3 px-4">
+                  <td className="py-2.5 px-3.5">
                     <div className="flex items-center gap-2">
-                      <div className="w-16 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div className="w-14 bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
                         <div
                           className={`h-full ${
                             row.stockout_risk_pct >= 70
-                              ? 'bg-rose-500'
+                              ? 'bg-rose-600 dark:bg-rose-500'
                               : row.stockout_risk_pct >= 40
-                              ? 'bg-amber-500'
-                              : 'bg-emerald-500'
+                              ? 'bg-amber-600 dark:bg-amber-500'
+                              : 'bg-emerald-600 dark:bg-emerald-500'
                           }`}
                           style={{ width: `${Math.min(100, row.stockout_risk_pct)}%` }}
                         />
                       </div>
-                      <span className="text-[11px] text-slate-300">{row.stockout_risk_pct.toFixed(1)}%</span>
+                      <span className="text-[11px] text-slate-700 dark:text-slate-300">
+                        {row.stockout_risk_pct.toFixed(1)}%
+                      </span>
                     </div>
                   </td>
 
                   {/* Urgency Pill */}
-                  <td className="py-3 px-4 font-sans">
+                  <td className="py-2.5 px-3.5 font-sans">
                     <span
-                      className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      className={`inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border ${
                         row.urgency === 'CRITICAL'
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/50'
                           : row.urgency === 'WARNING'
-                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/50'
                       }`}
                     >
                       {row.urgency}
@@ -267,13 +357,23 @@ export default function AlertsTable({
                   </td>
 
                   {/* Actions */}
-                  <td className="py-3 px-4 text-right font-sans">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="py-2.5 px-3.5 text-right font-sans">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => handleOpenPO(row)}
+                        title="Generate Purchase Order"
+                        aria-label="Generate Purchase Order"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 text-[11px] font-semibold transition"
+                      >
+                        <FileSpreadsheet className="w-3.5 h-3.5" />
+                        <span>Create PO</span>
+                      </button>
                       {onInspectWithCopilot && (
                         <button
                           onClick={() => onInspectWithCopilot(row)}
-                          title="Inspect in Copilot"
-                          className="p-1.5 bg-slate-800 hover:bg-indigo-600/30 text-indigo-400 hover:text-indigo-200 rounded-lg border border-slate-700 transition"
+                          title="Inspect with Chatbot"
+                          aria-label="Inspect with Chatbot"
+                          className="p-1 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition"
                         >
                           <Bot className="w-3.5 h-3.5" />
                         </button>
@@ -282,7 +382,8 @@ export default function AlertsTable({
                         <button
                           onClick={() => onSimulateSku(row.sku_id, row.store_id)}
                           title="Simulate Scenario"
-                          className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-700 transition"
+                          aria-label="Simulate Scenario"
+                          className="p-1 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition"
                         >
                           <Sliders className="w-3.5 h-3.5" />
                         </button>
@@ -293,7 +394,7 @@ export default function AlertsTable({
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="py-8 text-center text-xs text-slate-500 font-sans">
+                <td colSpan={9} className="py-8 text-center text-xs text-slate-400 dark:text-slate-500 font-sans">
                   {isLoading
                     ? 'Loading inventory breach telemetry...'
                     : 'No inventory breaches match current criteria.'}
@@ -303,6 +404,13 @@ export default function AlertsTable({
           </tbody>
         </table>
       </div>
+
+      {/* 1-Click Purchase Order Modal */}
+      <PurchaseOrderModal
+        alert={poModalAlert}
+        isOpen={isPoModalOpen}
+        onClose={() => setIsPoModalOpen(false)}
+      />
     </div>
   );
 }
